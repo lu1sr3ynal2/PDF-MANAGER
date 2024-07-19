@@ -1,0 +1,15 @@
+/* Puedes agregar estilos personalizados aquí */
+
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+}
+
+.App {
+    max-width: 800px;
+    margin: auto;
+}
+
+button {
+    margin-right: 5px;
+}
