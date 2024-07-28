@@ -10,7 +10,7 @@ const FileList = ({ refresh }) => {
 
     const fetchFiles = async () => {
         try {
-            const response = await fetch('http://localhost:5000/api/files');
+            const response = await fetch('http://localhost:8000/api/files');
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -27,19 +27,19 @@ const FileList = ({ refresh }) => {
 
     const handleUpdate = (oldName, newName) => {
         setFiles(files.map(file => {
-            if (file === oldName) {
-                return newName;
+            if (file.name === oldName) {
+                return { ...file, name: newName };
             }
             return file;
         }));
     };
 
     return (
-        <div>
-            {files.map((file, index) => (
-                <FileItem key={index} file={file} onDelete={handleDelete} onUpdate={handleUpdate} />
+        <ul style={{ listStyleType: 'none', padding: 0 }}>
+            {files.map(file => (
+                <FileItem key={file.name} file={file} onDelete={handleDelete} onUpdate={handleUpdate} />
             ))}
-        </div>
+        </ul>
     );
 };
 
