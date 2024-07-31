@@ -11,6 +11,8 @@ from app.pdf_operations.ocr import perform_ocr
 from app.core.config import UPLOAD_DIR
 from app.pdf_operations.thumbnail import generate_thumbnail, get_pdf_metadata
 import fitz  # PyMuPDF
+from fastapi.responses import FileResponse
+
 
 router = APIRouter()
 
@@ -84,3 +86,11 @@ async def get_thumbnail(filename: str):
 @router.get("/api/metadata/{filename}")
 async def get_metadata(filename: str):
     return get_pdf_metadata(filename)
+
+@router.get("/api/files/{filename}")
+async def get_file(filename: str):
+    file_path = os.path.join(UPLOAD_DIR, filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Archivo no encontrado")
+    
+    return FileResponse(file_path, media_type='application/pdf')

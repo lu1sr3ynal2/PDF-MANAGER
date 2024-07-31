@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { fetchThumbnail } from '../services/thumbnailService';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Link } from 'react-router-dom';
+import { fetchThumbnail, deleteFile, renameFile, performOCR } from './fileOperations';
 
 const FileItem = ({ file, onDelete, onUpdate }) => {
     const [editing, setEditing] = useState(false);
@@ -7,25 +8,22 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
     const [isRenaming, setIsRenaming] = useState(false);
     const [thumbnail, setThumbnail] = useState(null);
 
-    useEffect(() => {
-        getThumbnail();
-    }, []);
-
-    const getThumbnail = async () => {
+    const getThumbnail = useCallback(async () => {
         try {
             const imageObjectURL = await fetchThumbnail(file.name);
             setThumbnail(imageObjectURL);
         } catch (error) {
             console.error('Error fetching thumbnail:', error);
         }
-    };
+    }, [file.name]);
+
+    useEffect(() => {
+        getThumbnail();
+    }, [getThumbnail]);
 
     const handleDelete = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/delete/${file.name}`, { method: 'DELETE' });
-            if (!response.ok) {
-                throw new Error('Error deleting file');
-            }
+            await deleteFile(file.name);
             onDelete();
         } catch (error) {
             console.error('Error deleting file:', error);
@@ -37,20 +35,9 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
         setIsRenaming(true);
 
         try {
-            const response = await fetch(`http://localhost:8000/api/rename/${encodeURIComponent(file.name)}`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({ new_name: newName }),
-            });
-            if (response.ok) {
-                setEditing(false);
-                onUpdate(file.name, newName);
-            } else {
-                const errorText = await response.text();
-                throw new Error(`Error renaming file: ${errorText}`);
-            }
+            await renameFile(file.name, newName);
+            setEditing(false);
+            onUpdate(file.name, newName);
         } catch (error) {
             console.error('Error renaming file:', error);
         } finally {
@@ -75,16 +62,10 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
 
     const handleOCR = async () => {
         try {
-            const response = await fetch(`http://localhost:8000/api/ocr/${file.name}`);
-            if (!response.ok) {
-                throw new Error('Error performing OCR');
-            }
-
-            const data = await response.json();
+            const content = await performOCR(file.name);
             const newWindow = window.open();
-            newWindow.document.write('<pre>' + data.content + '</pre>');
+            newWindow.document.write('<pre>' + content + '</pre>');
             newWindow.document.close();
-
             onUpdate();
         } catch (error) {
             console.error('Error performing OCR:', error);
@@ -92,13 +73,25 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
     };
 
     return (
-        <li style={{ marginBottom: '20px', padding: '10px', backgroundColor: '#f5f5f5', borderRadius: '5px' }}>
-            <div style={{ marginBottom: '10px', display: 'flex', alignItems: 'center' }}>
+        <li className="list-group-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
+            <Link to={`/view/${file.name}`} className="me-3">
                 {thumbnail && (
-                    <img src={thumbnail} alt="Thumbnail" style={{ width: '150px', height: 'auto', marginRight: '20px' }} />
+                    <img
+                        src={thumbnail}
+                        alt="Thumbnail"
+                        className="img-thumbnail"
+                        style={{ width: '150px', height: 'auto' }}
+                    />
                 )}
+            </Link>
+            <div className="flex-grow-1">
                 {!editing ? (
-                    <span style={{ fontSize: '20px', color: '#333', marginRight: '10px' }} onClick={() => setEditing(true)}>{file.name}</span>
+                    <span
+                        className="fs-5 text-dark"
+                        onClick={() => setEditing(true)}
+                    >
+                        {file.name}
+                    </span>
                 ) : (
                     <input
                         type="text"
@@ -106,23 +99,46 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
                         onChange={handleChange}
                         autoFocus
                         onBlur={handleBlur}
-                        style={{ fontSize: '20px', marginRight: '10px', padding: '5px', flex: 1, minWidth: '100px' }}
+                        className="form-control form-control-sm"
                     />
                 )}
-                {editing && (
-                    <div>
-                        <button onClick={handleAcceptRename} className="btn btn-success" style={{ marginRight: '5px' }}>Aceptar</button>
-                        <button onClick={handleCancelRename} className="btn btn-secondary">Cancelar</button>
-                    </div>
-                )}
             </div>
-            <div>
-                <p style={{ fontSize: '16px', color: '#555' }}>Páginas: {file.pages}</p>
-                <p style={{ fontSize: '16px', color: '#555' }}>Tamaño: {(file.size / 1024).toFixed(2)} KB</p>
+            {editing && (
+                <div className="ms-2">
+                    <button
+                        onClick={handleAcceptRename}
+                        className="btn btn-success me-2"
+                    >
+                        Aceptar
+                    </button>
+                    <button
+                        onClick={handleCancelRename}
+                        className="btn btn-secondary"
+                    >
+                        Cancelar
+                    </button>
+                </div>
+            )}
+            <div className="mt-2">
+                <p className="mb-1 text-muted">Páginas: {file.pages}</p>
+                <p className="mb-0 text-muted">Tamaño: {(file.size / 1024).toFixed(2)} KB</p>
             </div>
-            <div>
-                <button onClick={handleOCR} className="btn btn-secondary">Extraer</button>
-                <button onClick={handleDelete} className="btn btn-danger">Borrar</button>
+            <div className="mt-2">
+                <Link to={`/view/${file.name}`} className="me-2">
+                    <button className="btn btn-primary">Ver PDF</button>
+                </Link>
+                <button
+                    onClick={handleOCR}
+                    className="btn btn-secondary me-2"
+                >
+                    Extraer
+                </button>
+                <button
+                    onClick={handleDelete}
+                    className="btn btn-danger"
+                >
+                    Borrar
+                </button>
             </div>
         </li>
     );
