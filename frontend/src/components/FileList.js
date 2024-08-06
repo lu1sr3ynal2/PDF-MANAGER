@@ -1,12 +1,16 @@
+// FileList.js
 import React, { useEffect, useState } from 'react';
-import FileItem from './FileItem';
+import FileExplorer from './FileExplorer';
+import FileTabs from './FileTabs';
 
-const FileList = ({ refresh }) => {
+const FileList = () => {
     const [files, setFiles] = useState([]);
+    const [openTabs, setOpenTabs] = useState([]);
+    const [activeTab, setActiveTab] = useState('explorer'); // Default to 'explorer' for file list
 
     useEffect(() => {
         fetchFiles();
-    }, [refresh]);
+    }, []);
 
     const fetchFiles = async () => {
         try {
@@ -22,7 +26,7 @@ const FileList = ({ refresh }) => {
     };
 
     const handleDelete = () => {
-        fetchFiles();
+        fetchFiles(); // Refresh the file list after deletion
     };
 
     const handleUpdate = (oldName, newName) => {
@@ -34,12 +38,38 @@ const FileList = ({ refresh }) => {
         }));
     };
 
+    const openTab = (file) => {
+        const exists = openTabs.some(tab => tab.name === file.name);
+        if (!exists) {
+            setOpenTabs([...openTabs, file]);
+        }
+        setActiveTab(file.name); // Switch to the opened file's tab
+    };
+
+    const closeTab = (file) => {
+        setOpenTabs(openTabs.filter(tab => tab.name !== file.name));
+        if (activeTab === file.name) {
+            setActiveTab('explorer'); // Switch back to explorer when closing the active tab
+        }
+    };
+
     return (
-        <ul style={{ listStyleType: 'none', padding: 0 }}>
-            {files.map(file => (
-                <FileItem key={file.name} file={file} onDelete={handleDelete} onUpdate={handleUpdate} />
-            ))}
-        </ul>
+        <div>
+            <FileTabs 
+                activeTab={activeTab} 
+                onSelect={setActiveTab} 
+                openTabs={openTabs} 
+                onCloseTab={closeTab}
+            />
+            {activeTab === 'explorer' && (
+                <FileExplorer 
+                    files={files} 
+                    onDelete={handleDelete} 
+                    onUpdate={handleUpdate} 
+                    onView={openTab} 
+                />
+            )}
+        </div>
     );
 };
 

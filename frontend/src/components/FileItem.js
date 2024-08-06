@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchThumbnail, deleteFile, renameFile, performOCR } from './fileOperations';
 
-const FileItem = ({ file, onDelete, onUpdate }) => {
+const FileItem = ({ file, onDelete, onUpdate, onView }) => {
     const [editing, setEditing] = useState(false);
     const [newName, setNewName] = useState(file.name);
     const [isRenaming, setIsRenaming] = useState(false);
@@ -74,7 +74,7 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
 
     return (
         <li className="list-group-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-            <Link to={`/view/${file.name}`} className="me-3">
+            <Link to="#" className="me-3" onClick={onView}>
                 {thumbnail && (
                     <img
                         src={thumbnail}
@@ -124,7 +124,7 @@ const FileItem = ({ file, onDelete, onUpdate }) => {
                 <p className="mb-0 text-muted">Tamaño: {(file.size / 1024).toFixed(2)} KB</p>
             </div>
             <div className="mt-2">
-                <Link to={`/view/${file.name}`} className="me-2">
+                <Link to={`/view/${file.name}`} target="_blank" className="me-2">
                     <button className="btn btn-primary">Ver PDF</button>
                 </Link>
                 <button
