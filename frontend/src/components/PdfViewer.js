@@ -17,7 +17,7 @@ const PdfViewer = () => {
         <div style={{ height: '80vh' }}>
             <Worker workerUrl={workerUrl}>
                 <Viewer
-                    fileUrl={`http://localhost:8000/api/files/${filename}`}
+                    fileUrl={`${process.env.REACT_APP_API_URL}/api/files/${filename}`}
                     plugins={[defaultLayoutPluginInstance]}
                     renderError={(error) => (
                         <div>Error: {error.message}</div>

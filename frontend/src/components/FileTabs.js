@@ -16,7 +16,7 @@ const FileTabs = ({ activeTab, onSelect, openTabs, onCloseTab }) => (
             >
                 <div style={{ padding: '20px' }}>
                     <iframe 
-                        src={`http://localhost:8000/api/files/${file.name}`} 
+                        src={`${process.env.REACT_APP_API_URL}/api/files/${file.name}`} 
                         title={file.name} 
                         width="100%" 
                         height="600px" 

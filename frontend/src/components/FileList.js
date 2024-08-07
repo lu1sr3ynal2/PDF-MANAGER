@@ -14,7 +14,7 @@ const FileList = () => {
 
     const fetchFiles = async () => {
         try {
-            const response = await fetch('http://localhost:8000/api/files');
+            const response = await fetch(`${process.env.REACT_APP_API_URL}/api/files`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
