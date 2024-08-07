@@ -1,2 +1,4 @@
-./venv\Scripts\activate
-python .\run.py
+Virtual Env
+	./venv\Scripts\activate
+Run server 
+	python .\run.py
