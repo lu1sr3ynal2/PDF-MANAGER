@@ -1,4 +1,6 @@
 import React, { useState } from 'react';
+import Button from '@mui/material/Button';
+import Typography from '@mui/material/Typography';
 
 const FileUpload = ({ onUpload }) => {
     const [selectedFile, setSelectedFile] = useState(null);
@@ -23,9 +25,9 @@ const FileUpload = ({ onUpload }) => {
             })
             .then(data => {
                 console.log('File uploaded successfully:', data);
-                onUpload(); // Llamar a la función de actualización después de subir el archivo
-                setSelectedFile(null); // Resetea el estado del archivo seleccionado
-                document.getElementById('fileInput').value = ''; // Resetea el valor del campo de entrada de archivo
+                onUpload();
+                setSelectedFile(null);
+                document.getElementById('fileInput').value = '';
             })
             .catch(error => {
                 console.error('Error uploading file:', error);
@@ -34,10 +36,39 @@ const FileUpload = ({ onUpload }) => {
 
     return (
         <div>
-            <input type="file" id="fileInput" onChange={onChangeHandler} />
-            <button type="button" className="btn btn-primary" onClick={onClickHandler} disabled={!selectedFile}>
+            <input
+                type="file"
+                id="fileInput"
+                onChange={onChangeHandler}
+                style={{ display: 'none' }}
+            />
+            <Button
+                variant="contained"
+                component="label"
+                color="primary"
+                style={{ marginRight: '10px' }}
+            >
+                Seleccionar Archivo
+                <input
+                    type="file"
+                    id="fileInput"
+                    onChange={onChangeHandler}
+                    hidden
+                />
+            </Button>
+            <Button
+                variant="contained"
+                color="secondary"
+                onClick={onClickHandler}
+                disabled={!selectedFile}
+            >
                 Subir
-            </button>
+            </Button>
+            {selectedFile && (
+                <Typography variant="body2" style={{ marginTop: '10px' }}>
+                    {selectedFile.name}
+                </Typography>
+            )}
         </div>
     );
 };

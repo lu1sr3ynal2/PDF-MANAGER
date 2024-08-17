@@ -14,7 +14,7 @@ const PdfViewer = () => {
     const defaultLayoutPluginInstance = defaultLayoutPlugin();
 
     return (
-        <div style={{ height: '80vh' }}>
+        <div style={{ height: '90vh' }}>
             <Worker workerUrl={workerUrl}>
                 <Viewer
                     fileUrl={`${process.env.REACT_APP_API_URL}/api/files/${filename}`}

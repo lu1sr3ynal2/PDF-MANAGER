@@ -1,7 +1,7 @@
-// FileList.js
 import React, { useEffect, useState } from 'react';
 import FileExplorer from './FileExplorer';
 import FileTabs from './FileTabs';
+import { Box } from '@mui/material';
 
 const FileList = () => {
     const [files, setFiles] = useState([]);
@@ -54,7 +54,7 @@ const FileList = () => {
     };
 
     return (
-        <div>
+        <Box>
             <FileTabs 
                 activeTab={activeTab} 
                 onSelect={setActiveTab} 
@@ -69,7 +69,7 @@ const FileList = () => {
                     onView={openTab} 
                 />
             )}
-        </div>
+        </Box>
     );
 };
 

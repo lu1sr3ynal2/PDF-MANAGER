@@ -1,6 +1,12 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchThumbnail, deleteFile, renameFile, performOCR } from './fileOperations';
+import { ListItem, Typography, Box, IconButton, TextField } from '@mui/material';
+import LaunchIcon from '@mui/icons-material/Launch';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import DeleteIcon from '@mui/icons-material/Delete';
+import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
+import CancelIcon from '@mui/icons-material/Cancel';
 
 const FileItem = ({ file, onDelete, onUpdate, onView }) => {
     const [editing, setEditing] = useState(false);
@@ -73,74 +79,60 @@ const FileItem = ({ file, onDelete, onUpdate, onView }) => {
     };
 
     return (
-        <li className="list-group-item d-flex align-items-center mb-3 p-3 bg-white rounded shadow-sm">
-            <Link to="#" className="me-3" onClick={onView}>
+        <ListItem sx={{ mb: 3, p: 3, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
+            <Link to="#" onClick={onView} style={{ marginRight: '16px' }}>
                 {thumbnail && (
                     <img
                         src={thumbnail}
                         alt="Thumbnail"
-                        className="img-thumbnail"
-                        style={{ width: '150px', height: 'auto' }}
+                        style={{ width: '150px', height: 'auto', borderRadius: '8px' }}
                     />
                 )}
             </Link>
-            <div className="flex-grow-1">
+            <Box sx={{ flexGrow: 1 }}>
                 {!editing ? (
-                    <span
-                        className="fs-5 text-dark"
-                        onClick={() => setEditing(true)}
-                    >
+                    <Typography variant="h6" onClick={() => setEditing(true)}>
                         {file.name}
-                    </span>
+                    </Typography>
                 ) : (
-                    <input
-                        type="text"
+                    <TextField
                         value={newName}
                         onChange={handleChange}
                         autoFocus
                         onBlur={handleBlur}
-                        className="form-control form-control-sm"
+                        variant="outlined"
+                        size="small"
                     />
                 )}
-            </div>
+            </Box>
             {editing && (
-                <div className="ms-2">
-                    <button
-                        onClick={handleAcceptRename}
-                        className="btn btn-success me-2"
-                    >
-                        Aceptar
-                    </button>
-                    <button
-                        onClick={handleCancelRename}
-                        className="btn btn-secondary"
-                    >
-                        Cancelar
-                    </button>
-                </div>
+                <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
+                    <IconButton onClick={handleAcceptRename} color="success">
+                        <DriveFileRenameOutlineIcon />
+                    </IconButton>
+                    <IconButton onClick={handleCancelRename} color="secondary">
+                        <CancelIcon />
+                    </IconButton>
+                </Box>
             )}
-            <div className="mt-2">
-                <p className="mb-1 text-muted">Páginas: {file.pages}</p>
-                <p className="mb-0 text-muted">Tamaño: {(file.size / 1024).toFixed(2)} KB</p>
-            </div>
-            <div className="mt-2">
-                <Link to={`/view/${file.name}`} target="_blank" className="me-2">
-                    <button className="btn btn-primary">Ver PDF</button>
+            <Box sx={{ ml: 2 }}>
+                <Typography variant="body2" color="textSecondary">Pages: {file.pages}</Typography>
+                <Typography variant="body2" color="textSecondary">{(file.size / 1024).toFixed(2)} KB</Typography>
+            </Box>
+            <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
+                <Link to={`/view/${file.name}`} target="_blank" style={{ textDecoration: 'none', marginRight: '8px' }}>
+                    <IconButton color="primary">
+                        <LaunchIcon /> 
+                    </IconButton>
                 </Link>
-                <button
-                    onClick={handleOCR}
-                    className="btn btn-secondary me-2"
-                >
-                    Extraer
-                </button>
-                <button
-                    onClick={handleDelete}
-                    className="btn btn-danger"
-                >
-                    Borrar
-                </button>
-            </div>
-        </li>
+                <IconButton onClick={handleOCR}  color="secondary" >
+                    <DocumentScannerIcon />
+                </IconButton>
+                <IconButton onClick={handleDelete} color="error">
+                    <DeleteIcon />
+                </IconButton>
+            </Box>
+        </ListItem>
     );
 };
 

@@ -1,36 +1,50 @@
-// FileTabs.js
 import React from 'react';
-import Tabs from 'react-bootstrap/Tabs';
-import Tab from 'react-bootstrap/Tab';
+import { Tabs, Tab, Box, IconButton } from '@mui/material';
+import CloseIcon from '@mui/icons-material/Close';
 
 const FileTabs = ({ activeTab, onSelect, openTabs, onCloseTab }) => (
-    <Tabs activeKey={activeTab} onSelect={(k) => onSelect(k)} id="file-tabs">
-        <Tab eventKey="explorer" title="Explorador de Archivos">
-            {/* El contenido del explorador de archivos se renderiza en FileList.js */}
-        </Tab>
+    <Box sx={{ borderBottom: 1, borderColor: 'divider' }}>
+        <Tabs 
+            value={activeTab} 
+            onChange={(e, newValue) => onSelect(newValue)}
+            aria-label="file tabs"
+        >
+            <Tab label="Explorador de Archivos" value="explorer" />
+            {openTabs.map(file => (
+                <Tab 
+                    key={file.name} 
+                    label={
+                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                            {file.name}
+                            <IconButton 
+                                size="small" 
+                                onClick={(e) => { 
+                                    e.stopPropagation();
+                                    onCloseTab(file);
+                                }} 
+                                sx={{ ml: 1 }}
+                            >
+                                <CloseIcon fontSize="small" />
+                            </IconButton>
+                        </Box>
+                    } 
+                    value={file.name} 
+                />
+            ))}
+        </Tabs>
         {openTabs.map(file => (
-            <Tab 
-                eventKey={file.name} 
-                title={file.name} 
-                key={file.name}
-            >
-                <div style={{ padding: '20px' }}>
+            activeTab === file.name && (
+                <Box key={file.name} sx={{ p: 3 }}>
                     <iframe 
                         src={`${process.env.REACT_APP_API_URL}/api/files/${file.name}`} 
                         title={file.name} 
                         width="100%" 
                         height="600px" 
                     />
-                    <button 
-                        onClick={() => onCloseTab(file)} 
-                        className="btn btn-danger mt-3"
-                    >
-                        Cerrar
-                    </button>
-                </div>
-            </Tab>
+                </Box>
+            )
         ))}
-    </Tabs>
+    </Box>
 );
 
 export default FileTabs;
