@@ -1,139 +1,156 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { fetchThumbnail, deleteFile, renameFile, performOCR } from './fileOperations';
-import { ListItem, Typography, Box, IconButton, TextField } from '@mui/material';
-import LaunchIcon from '@mui/icons-material/Launch';
-import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
-import DeleteIcon from '@mui/icons-material/Delete';
-import DriveFileRenameOutlineIcon from '@mui/icons-material/DriveFileRenameOutline';
-import CancelIcon from '@mui/icons-material/Cancel';
+import React, { useState, useRef } from "react";
+import { Link } from "react-router-dom";
+import {
+  ListItem,
+  Typography,
+  Box,
+  IconButton,
+  TextField,
+  Tooltip,
+  Chip,
+} from "@mui/material";
+import LaunchIcon from "@mui/icons-material/Launch";
+import DocumentScannerIcon from "@mui/icons-material/DocumentScanner";
+import DeleteIcon from "@mui/icons-material/Delete";
+import DriveFileRenameOutlineIcon from "@mui/icons-material/DriveFileRenameOutline";
+import CancelIcon from "@mui/icons-material/Cancel";
+import Thumbnail from "./Thumbnail";
+import { handleRename, deleteFile, performOCR } from "./fileOperations";
 
 const FileItem = ({ file, onDelete, onUpdate, onView }) => {
-    const [editing, setEditing] = useState(false);
-    const [newName, setNewName] = useState(file.name);
-    const [isRenaming, setIsRenaming] = useState(false);
-    const [thumbnail, setThumbnail] = useState(null);
+  const [editing, setEditing] = useState(false);
+  const [newName, setNewName] = useState(file.name);
+  const textFieldRef = useRef(null);
+  const acceptButtonRef = useRef(null);
+  const cancelButtonRef = useRef(null);
 
-    const getThumbnail = useCallback(async () => {
-        try {
-            const imageObjectURL = await fetchThumbnail(file.name);
-            setThumbnail(imageObjectURL);
-        } catch (error) {
-            console.error('Error fetching thumbnail:', error);
-        }
-    }, [file.name]);
+  const handleAcceptRename = async () => {
+    const success = await handleRename(file.name, newName, onUpdate);
+    if (success) setEditing(false);
+  };
 
-    useEffect(() => {
-        getThumbnail();
-    }, [getThumbnail]);
+  const handleCancelRename = () => {
+    setNewName(file.name);
+    setEditing(false);
+  };
 
-    const handleDelete = async () => {
-        try {
-            await deleteFile(file.name);
-            onDelete();
-        } catch (error) {
-            console.error('Error deleting file:', error);
-        }
-    };
+  const handleChange = (e) => {
+    setNewName(e.target.value);
+  };
 
-    const handleAcceptRename = async () => {
-        if (isRenaming) return;
-        setIsRenaming(true);
+  const handleBlur = (e) => {
+    if (
+      e.relatedTarget !== acceptButtonRef.current &&
+      e.relatedTarget !== cancelButtonRef.current
+    ) {
+      handleCancelRename();
+    }
+  };
 
-        try {
-            await renameFile(file.name, newName);
-            setEditing(false);
-            onUpdate(file.name, newName);
-        } catch (error) {
-            console.error('Error renaming file:', error);
-        } finally {
-            setIsRenaming(false);
-        }
-    };
-
-    const handleCancelRename = () => {
-        setNewName(file.name);
-        setEditing(false);
-    };
-
-    const handleChange = (e) => {
-        setNewName(e.target.value);
-    };
-
-    const handleBlur = () => {
-        if (editing) {
-            handleAcceptRename();
-        }
-    };
-
-    const handleOCR = async () => {
-        try {
-            const content = await performOCR(file.name);
-            const newWindow = window.open();
-            newWindow.document.write('<pre>' + content + '</pre>');
-            newWindow.document.close();
-            onUpdate();
-        } catch (error) {
-            console.error('Error performing OCR:', error);
-        }
-    };
-
-    return (
-        <ListItem sx={{ mb: 3, p: 3, bgcolor: 'white', borderRadius: 1, boxShadow: 1 }}>
-            <Link to="#" onClick={onView} style={{ marginRight: '16px' }}>
-                {thumbnail && (
-                    <img
-                        src={thumbnail}
-                        alt="Thumbnail"
-                        style={{ width: '150px', height: 'auto', borderRadius: '8px' }}
-                    />
-                )}
-            </Link>
-            <Box sx={{ flexGrow: 1 }}>
-                {!editing ? (
-                    <Typography variant="h6" onClick={() => setEditing(true)}>
-                        {file.name}
-                    </Typography>
-                ) : (
-                    <TextField
-                        value={newName}
-                        onChange={handleChange}
-                        autoFocus
-                        onBlur={handleBlur}
-                        variant="outlined"
-                        size="small"
-                    />
-                )}
-            </Box>
-            {editing && (
-                <Box sx={{ display: 'flex', alignItems: 'center', ml: 2 }}>
-                    <IconButton onClick={handleAcceptRename} color="success">
-                        <DriveFileRenameOutlineIcon />
-                    </IconButton>
-                    <IconButton onClick={handleCancelRename} color="secondary">
-                        <CancelIcon />
-                    </IconButton>
-                </Box>
-            )}
-            <Box sx={{ ml: 2 }}>
-                <Typography variant="body2" color="textSecondary">Pages: {file.pages}</Typography>
-                <Typography variant="body2" color="textSecondary">{(file.size / 1024).toFixed(2)} KB</Typography>
-            </Box>
-            <Box sx={{ ml: 2, display: 'flex', alignItems: 'center' }}>
-                <Link to={`/view/${file.name}`} target="_blank" style={{ textDecoration: 'none', marginRight: '8px' }}>
-                    <IconButton color="primary">
-                        <LaunchIcon /> 
-                    </IconButton>
-                </Link>
-                <IconButton onClick={handleOCR}  color="secondary" >
-                    <DocumentScannerIcon />
-                </IconButton>
-                <IconButton onClick={handleDelete} color="error">
-                    <DeleteIcon />
-                </IconButton>
-            </Box>
-        </ListItem>
-    );
+  return (
+    <ListItem
+      sx={{
+        mb: 2,
+        p: 2,
+        bgcolor: "#f7f9fc",
+        borderRadius: "12px",
+        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+        display: "flex",
+        alignItems: "center",
+        transition: "transform 0.2s",
+        "&:hover": {
+          transform: "scale(1.02)",
+          boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.2)",
+        },
+      }}
+    >
+      <Link
+        to="#"
+        onClick={onView}
+        style={{ marginRight: "16px", textDecoration: "none" }}
+      >
+        <Thumbnail file={file} />
+      </Link>
+      <Box sx={{ flexGrow: 1, ml: 2 }}>
+        {!editing ? (
+          <Typography
+            variant="h6"
+            sx={{ cursor: "pointer" }}
+            onClick={() => setEditing(true)}
+          >
+            {file.name}
+          </Typography>
+        ) : (
+          <TextField
+            ref={textFieldRef}
+            value={newName}
+            onChange={handleChange}
+            autoFocus
+            variant="outlined"
+            size="small"
+            onBlur={handleBlur}
+            sx={{ width: "100%" }}
+          />
+        )}
+        <Box sx={{ display: "flex", mt: 1, alignItems: "center" }}>
+          <Tooltip title="Pages">
+            <Chip
+              label={`Pages: ${file.pages}`}
+              color="primary"
+              sx={{ mr: 1 }}
+            />
+          </Tooltip>
+          <Tooltip title="Size">
+            <Chip
+              label={`${(file.size / 1024).toFixed(2)} KB`}
+              color="secondary"
+            />
+          </Tooltip>
+        </Box>
+      </Box>
+      {editing && (
+        <Box sx={{ display: "flex", alignItems: "center", ml: 2 }}>
+          <IconButton
+            ref={acceptButtonRef}
+            onClick={handleAcceptRename}
+            color="success"
+          >
+            <DriveFileRenameOutlineIcon />
+          </IconButton>
+          <IconButton
+            ref={cancelButtonRef}
+            onClick={handleCancelRename}
+            color="secondary"
+          >
+            <CancelIcon />
+          </IconButton>
+        </Box>
+      )}
+      <Box sx={{ ml: 2, display: "flex", alignItems: "center" }}>
+        <Link
+          to={`/view/${file.name}`}
+          target="_blank"
+          style={{ textDecoration: "none", marginRight: "8px" }}
+        >
+          <IconButton color="primary">
+            <LaunchIcon />
+          </IconButton>
+        </Link>
+        <IconButton
+          onClick={() => performOCR(file.name, onUpdate)}
+          color="secondary"
+        >
+          <DocumentScannerIcon />
+        </IconButton>
+        <IconButton
+          onClick={() => deleteFile(file.name, onDelete)}
+          color="error"
+        >
+          <DeleteIcon />
+        </IconButton>
+      </Box>
+    </ListItem>
+  );
 };
 
 export default FileItem;
