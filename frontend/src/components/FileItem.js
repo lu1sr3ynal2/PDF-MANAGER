@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useCallback, memo } from "react";
 import { Link } from "react-router-dom";
 import {
   ListItem,
@@ -17,59 +17,59 @@ import CancelIcon from "@mui/icons-material/Cancel";
 import Thumbnail from "./Thumbnail";
 import { handleRename, deleteFile, performOCR } from "./fileOperations";
 
-const FileItem = ({ file, onDelete, onUpdate, onView }) => {
+const listItemStyle = {
+  mb: 2,
+  p: 2,
+  bgcolor: "#f7f9fc",
+  borderRadius: "12px",
+  boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
+  display: "flex",
+  alignItems: "center",
+  transition: "transform 0.2s",
+  "&:hover": {
+    transform: "scale(1.02)",
+    boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.2)",
+  },
+};
+
+const FileItem = memo(({ file, onDelete, onUpdate, onView, thumbnail }) => {
   const [editing, setEditing] = useState(false);
   const [newName, setNewName] = useState(file.name);
   const textFieldRef = useRef(null);
   const acceptButtonRef = useRef(null);
   const cancelButtonRef = useRef(null);
 
-  const handleAcceptRename = async () => {
+  const handleAcceptRename = useCallback(async () => {
     const success = await handleRename(file.name, newName, onUpdate);
     if (success) setEditing(false);
-  };
+  }, [file.name, newName, onUpdate]);
 
-  const handleCancelRename = () => {
+  const handleCancelRename = useCallback(() => {
     setNewName(file.name);
     setEditing(false);
-  };
+  }, [file.name]);
 
   const handleChange = (e) => {
     setNewName(e.target.value);
   };
 
-  const handleBlur = (e) => {
+  const handleBlur = useCallback((e) => {
     if (
       e.relatedTarget !== acceptButtonRef.current &&
       e.relatedTarget !== cancelButtonRef.current
     ) {
       handleCancelRename();
     }
-  };
+  }, [handleCancelRename]);
 
   return (
-    <ListItem
-      sx={{
-        mb: 2,
-        p: 2,
-        bgcolor: "#f7f9fc",
-        borderRadius: "12px",
-        boxShadow: "0px 4px 12px rgba(0, 0, 0, 0.1)",
-        display: "flex",
-        alignItems: "center",
-        transition: "transform 0.2s",
-        "&:hover": {
-          transform: "scale(1.02)",
-          boxShadow: "0px 8px 20px rgba(0, 0, 0, 0.2)",
-        },
-      }}
-    >
+    <ListItem sx={listItemStyle}>
       <Link
         to="#"
         onClick={onView}
         style={{ marginRight: "16px", textDecoration: "none" }}
       >
-        <Thumbnail file={file} />
+        <Thumbnail file={file} thumbnail={thumbnail} />
       </Link>
       <Box sx={{ flexGrow: 1, ml: 2 }}>
         {!editing ? (
@@ -94,17 +94,10 @@ const FileItem = ({ file, onDelete, onUpdate, onView }) => {
         )}
         <Box sx={{ display: "flex", mt: 1, alignItems: "center" }}>
           <Tooltip title="Pages">
-            <Chip
-              label={`Pages: ${file.pages}`}
-              color="primary"
-              sx={{ mr: 1 }}
-            />
+            <Chip label={`Pages: ${file.pages}`} color="primary" sx={{ mr: 1 }} />
           </Tooltip>
           <Tooltip title="Size">
-            <Chip
-              label={`${(file.size / 1024).toFixed(2)} KB`}
-              color="secondary"
-            />
+            <Chip label={`${(file.size / 1024).toFixed(2)} KB`} color="secondary" />
           </Tooltip>
         </Box>
       </Box>
@@ -151,6 +144,6 @@ const FileItem = ({ file, onDelete, onUpdate, onView }) => {
       </Box>
     </ListItem>
   );
-};
+});
 
 export default FileItem;

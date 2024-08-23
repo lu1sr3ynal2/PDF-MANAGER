@@ -36,7 +36,7 @@ const FileUpload = ({ onUpload }) => {
 
       const data = await response.json();
       console.log("File uploaded successfully:", data);
-      onUpload(); // Actualiza el listado de archivos sin recargar la página
+      if (onUpload) onUpload(); // Actualiza la lista de archivos sin recargar la página
       setSelectedFile(null);
     } catch (error) {
       console.error("Error uploading file:", error);

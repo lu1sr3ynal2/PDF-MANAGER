@@ -17,8 +17,31 @@ const PdfViewer = ({ file }) => {
       setFileUrl(`${process.env.REACT_APP_API_URL}/api/files/${file.name}`);
     } else if (filename) {
       setFileUrl(`${process.env.REACT_APP_API_URL}/api/files/${filename}`);
+    } else {
+      setFileUrl(""); // No hay archivo para mostrar
     }
+    // Reinicia el estado de carga cada vez que cambia el fileUrl
+    setLoading(true);
   }, [file, filename]);
+
+  // Maneja el caso en que no hay archivo para mostrar
+  if (!fileUrl) {
+    return (
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: "100vh",
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <div style={{ textAlign: "center", padding: "20px" }}>
+          No se encontró el archivo
+        </div>
+      </Box>
+    );
+  }
 
   return (
     <Box
@@ -57,22 +80,16 @@ const PdfViewer = ({ file }) => {
         }}
       >
         <Worker workerUrl={workerUrl}>
-          {fileUrl ? (
-            <Viewer
-              fileUrl={fileUrl}
-              defaultScale="PageFit"
-              onDocumentLoad={() => setLoading(false)}
-              renderError={(error) => (
-                <div style={{ textAlign: "center", padding: "20px" }}>
-                  Error: {error.message}
-                </div>
-              )}
-            />
-          ) : (
-            <div style={{ textAlign: "center", padding: "20px" }}>
-              No se encontró el archivo
-            </div>
-          )}
+          <Viewer
+            fileUrl={fileUrl}
+            defaultScale="PageFit"
+            onDocumentLoad={() => setLoading(false)}
+            renderError={(error) => (
+              <div style={{ textAlign: "center", padding: "20px" }}>
+                Error: {error.message}
+              </div>
+            )}
+          />
         </Worker>
       </Box>
     </Box>

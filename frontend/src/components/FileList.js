@@ -7,6 +7,7 @@ const FileList = () => {
   const [files, setFiles] = useState([]);
   const [openTabs, setOpenTabs] = useState([]);
   const [activeTab, setActiveTab] = useState("explorer"); // Default to 'explorer' for file list
+  const [thumbnails, setThumbnails] = useState({}); // Estado centralizado para las miniaturas
 
   useEffect(() => {
     fetchFiles();
@@ -57,6 +58,13 @@ const FileList = () => {
     }
   };
 
+  const updateThumbnail = (fileName, thumbnailURL) => {
+    setThumbnails((prevThumbnails) => ({
+      ...prevThumbnails,
+      [fileName]: thumbnailURL,
+    }));
+  };
+
   return (
     <Box sx={{ mt: 3 }}>
       <FileTabs
@@ -71,6 +79,8 @@ const FileList = () => {
           onDelete={handleDelete}
           onUpdate={handleUpdate}
           onView={openTab}
+          thumbnails={thumbnails}
+          updateThumbnail={updateThumbnail}
         />
       )}
     </Box>

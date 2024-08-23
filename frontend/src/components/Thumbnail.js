@@ -1,24 +1,8 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React from "react";
 import { Box } from "@mui/material";
 import FilePresentIcon from "@mui/icons-material/FilePresent";
-import { fetchThumbnail } from "./fileOperations";
 
-const Thumbnail = ({ file }) => {
-  const [thumbnail, setThumbnail] = useState(null);
-
-  const getThumbnail = useCallback(async () => {
-    try {
-      const imageObjectURL = await fetchThumbnail(file.name);
-      setThumbnail(imageObjectURL);
-    } catch (error) {
-      console.error("Error fetching thumbnail:", error);
-    }
-  }, [file.name]);
-
-  useEffect(() => {
-    getThumbnail();
-  }, [getThumbnail]);
-
+const Thumbnail = ({ file, thumbnail }) => {
   return (
     <Box
       sx={{
@@ -39,8 +23,13 @@ const Thumbnail = ({ file }) => {
       {thumbnail ? (
         <img
           src={thumbnail}
-          alt="Thumbnail"
-          style={{ width: "100%", height: "auto" }}
+          alt={`Thumbnail of ${file.name}`}
+          style={{
+            width: "100%",
+            height: "auto",
+            display: "block",
+          }}
+          loading="lazy"  // Carga diferida
         />
       ) : (
         <FilePresentIcon sx={{ fontSize: 48, color: "#9e9e9e" }} />

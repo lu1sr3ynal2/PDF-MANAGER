@@ -18,8 +18,13 @@ def generate_thumbnail(filename):
     pix = page.get_pixmap()
     img = Image.frombytes("RGB", [pix.width, pix.height], pix.samples)
 
+    # Redimensiona la imagen a un tamaño adecuado para una miniatura
+    thumbnail_size = (200, 200)  # Tamaño de la miniatura
+    img.thumbnail(thumbnail_size, Image.LANCZOS)  # Cambiado a Image.LANCZOS
+
     buffer = io.BytesIO()
-    img.save(buffer, format="PNG")
+    # Guarda la imagen en formato WebP con compresión
+    img.save(buffer, format="WEBP", quality=80)
     buffer.seek(0)
 
     return buffer
