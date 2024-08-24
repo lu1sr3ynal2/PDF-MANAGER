@@ -1,9 +1,7 @@
-# app/api/endpoints/pdf.py (archivo principal)
-
+import logging
 from fastapi import APIRouter, UploadFile, File, HTTPException
 from pydantic import BaseModel
 from fastapi.responses import StreamingResponse
-import logging
 import os
 import io
 from app.utils.file_operations import save_file, delete_file, rename_file
@@ -13,6 +11,10 @@ from app.pdf_operations.thumbnail import generate_thumbnail, get_pdf_metadata
 import fitz  # PyMuPDF
 from fastapi.responses import FileResponse
 
+# Configuración del logging
+logging.basicConfig(level=logging.INFO)
+logging.getLogger("multipart").setLevel(logging.WARNING)
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 router = APIRouter()
 
@@ -39,11 +41,31 @@ def get_pdf_page_count(file_path):
 
 @router.post("/api/upload")
 async def upload_file(file: UploadFile = File(...)):
-    logging.debug(f"Received file: {file.filename}")
     if not file.filename.endswith('.pdf'):
         raise HTTPException(status_code=400, detail="Formato de archivo no válido. Por favor, sube un archivo PDF.")
+
+    # Guardar el archivo
     save_file(file, UPLOAD_DIR)
-    return {"message": "Archivo subido exitosamente"}
+    
+    # Obtener la ruta completa del archivo
+    file_path = os.path.join(UPLOAD_DIR, file.filename)
+    
+    # Obtener información del archivo
+    file_size = os.path.getsize(file_path)
+    page_count = get_pdf_page_count(file_path)
+    
+    # Loggear información relevante
+    logging.info(f"Archivo subido: {file.filename} ({file_size} bytes, {page_count} páginas)")
+    
+    # Devolver respuesta con detalles del archivo
+    return {
+        "message": "Archivo subido exitosamente",
+        "file_info": {
+            "name": file.filename,
+            "size": file_size,
+            "pages": page_count
+        }
+    }
 
 @router.delete("/api/delete/{filename}")
 async def delete_file_endpoint(filename: str):

@@ -1,25 +1,46 @@
 import React, { useState } from "react";
 import Button from "@mui/material/Button";
-import Typography from "@mui/material/Typography";
 import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
-import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import Typography from "@mui/material/Typography";
 import UploadFileIcon from "@mui/icons-material/UploadFile";
+import CloudUploadIcon from "@mui/icons-material/CloudUpload";
+import { styled } from "@mui/material/styles";
+
+const UploadContainer = styled(Box)(({ theme }) => ({
+  display: 'flex',
+  alignItems: 'center',
+  gap: theme.spacing(1),
+}));
+
+const VisuallyStyledButton = styled(Button)(({ theme }) => ({
+  minWidth: 'auto',
+  padding: theme.spacing(0.5, 1),
+}));
+
+const FileNameContainer = styled(Box)({
+  maxWidth: '150px',
+  overflow: 'hidden',
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
 
 const FileUpload = ({ onUpload }) => {
-  const [selectedFile, setSelectedFile] = useState(null);
+  const [selectedFiles, setSelectedFiles] = useState([]);
   const [uploading, setUploading] = useState(false);
 
   const onChangeHandler = (event) => {
-    setSelectedFile(event.target.files[0]);
+    setSelectedFiles(Array.from(event.target.files));
   };
 
   const onClickHandler = async () => {
-    if (!selectedFile) return;
+    if (selectedFiles.length === 0) return;
 
     setUploading(true);
     const formData = new FormData();
-    formData.append("file", selectedFile);
+    selectedFiles.forEach((file) => {
+      formData.append("file", file);
+    });
 
     try {
       const response = await fetch(
@@ -35,45 +56,54 @@ const FileUpload = ({ onUpload }) => {
       }
 
       const data = await response.json();
-      console.log("File uploaded successfully:", data);
-      if (onUpload) onUpload(); // Actualiza la lista de archivos sin recargar la página
-      setSelectedFile(null);
+      console.log("Files uploaded successfully:", data);
+      if (onUpload) onUpload();
+      setSelectedFiles([]);
     } catch (error) {
-      console.error("Error uploading file:", error);
+      console.error("Error uploading files:", error);
     } finally {
       setUploading(false);
     }
   };
 
   return (
-    <Box display="flex" alignItems="center">
-      <Button
-        variant="contained"
+    <UploadContainer>
+      <VisuallyStyledButton
         component="label"
+        variant="contained"
         color="primary"
         startIcon={<UploadFileIcon />}
-        style={{ marginRight: "10px" }}
       >
-        Seleccionar Archivo
-        <input type="file" onChange={onChangeHandler} hidden />
-      </Button>
-      <Button
-        variant="contained"
-        color="secondary"
-        onClick={onClickHandler}
-        disabled={!selectedFile || uploading}
-        startIcon={
-          uploading ? <CircularProgress size={24} /> : <CloudUploadIcon />
-        }
-      >
-        {uploading ? "Subiendo..." : "Subir"}
-      </Button>
-      {selectedFile && (
-        <Typography variant="body2" style={{ marginLeft: "10px" }}>
-          {selectedFile.name}
-        </Typography>
+        {selectedFiles.length === 0 ? "Seleccionar" : "Cambiar"}
+        <input
+          type="file"
+          accept=".pdf"
+          multiple
+          onChange={onChangeHandler}
+          hidden
+        />
+      </VisuallyStyledButton>
+      {selectedFiles.length > 0 && (
+        <>
+          <FileNameContainer>
+            <Typography variant="caption">
+              {selectedFiles.length === 1
+                ? selectedFiles[0].name
+                : `${selectedFiles.length} archivos seleccionados`}
+            </Typography>
+          </FileNameContainer>
+          <VisuallyStyledButton
+            variant="contained"
+            color="secondary"
+            onClick={onClickHandler}
+            disabled={uploading}
+            startIcon={uploading ? <CircularProgress size={16} /> : <CloudUploadIcon />}
+          >
+            {uploading ? "Subiendo" : "Subir"}
+          </VisuallyStyledButton>
+        </>
       )}
-    </Box>
+    </UploadContainer>
   );
 };
 
